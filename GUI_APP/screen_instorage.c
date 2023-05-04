@@ -537,6 +537,8 @@ void lv_screen_instorage_start()
  */
 void screen_instorage_record_add(uint8_t *tid)
 {
+    if (0 != InternalFlash_FindTIDAddr(tid, FLASH_USER_START_ADDR, sizeof(item_info_t)))   return;  //不是新的标签
+
     char buf[30] = {0};
     char buf2[30] = {0};
     record_no++;

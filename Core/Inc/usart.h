@@ -49,11 +49,15 @@ extern UART_HandleTypeDef huart3;
 
 #define UART1_REC_LEN          256     //最大接收字节数
 #define UART2_REC_LEN          200     //最大接收字节数
+#define UART3_REC_LEN          256     //最大接收字节数
 
 extern uint8_t Uart1_Rx_Buf[UART1_REC_LEN];   //接收数据
 extern uint8_t Uart1_Rx_Sta; //接收数据状态 0：未接收到数据  1：完整接收到一次数据
 
 extern uint8_t Uart2_Rx_Buf[UART2_REC_LEN];   //接收数据
+
+extern uint8_t Uart3_Rx_Buf[UART3_REC_LEN];   //接收数据
+extern uint8_t Uart3_Rx_Sta; //接收数据状态 0：未接收到数据  1：完整接收到一次数据
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);

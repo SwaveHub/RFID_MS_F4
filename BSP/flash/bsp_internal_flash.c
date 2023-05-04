@@ -15,6 +15,8 @@
   ******************************************************************************
   */
 #include "./flash/bsp_internal_flash.h"
+#include "Unix.h"
+#include "usart.h"
 
 static void InternalFlash_UpdateRecord(item_info_t* item_info, uint32_t dataLen);
 
@@ -190,7 +192,8 @@ void InternalFlash_WriteRecord(item_info_t** head_ref, uint32_t dataLen)
         if (current->mark == MARK_INSTORAGE) {
             addrStart = InternalFlash_FindStartAddr(FLASH_USER_START_ADDR, dataLen); //查找可写入标签记录的起始地址
             if (addrStart >= FLASH_USER_START_ADDR && addrStart <= FLASH_USER_END_ADDR - dataLen) { //地址合法
-                Internal_WriteFlash(addrStart , (uint32_t *)current, dataLen);
+                if (0 == InternalFlash_FindTIDAddr(current->TID, FLASH_USER_START_ADDR, dataLen))   //是新的标签
+                    Internal_WriteFlash(addrStart , (uint32_t *)current, dataLen);
             }
         } else if (current->mark == MARK_OUTSTORAGE) {
             InternalFlash_UpdateRecord(current, dataLen);
@@ -198,6 +201,62 @@ void InternalFlash_WriteRecord(item_info_t** head_ref, uint32_t dataLen)
         current = current->next;
         cnt++;
     }
+}
+
+/**
+ @brief 内部Flash上传标签记录
+ @param item_info_t *item_info
+ @return 无
+*/
+void InternalFlash_UploadRecord(item_info_t *item_info)
+{
+        /* 通过串口3发送cmd给上位机 */
+        /* 数据格式：帧头0xFC,0xFC，帧尾\r\n, 内容："名称","货架号","层号","TID","入库时间","出库时间",
+            例：'0xFC''0xFC'cola,1,1,69952000400582D1160A0000,2023yy5mm1dd21:28,NULL,'\r''\n'
+        */
+    uint8_t cmd[100] = {0};
+    uint8_t str[20] = {0};
+    memset(cmd, 0, sizeof(cmd));
+    cmd[0] = cmd[1] = 0xFC;
+    
+    strcat(cmd, item_info->name);
+    strcat(cmd, ",");
+    
+    sprintf(str, "%d", item_info->shelf);
+    strcat(cmd, str);
+    strcat(cmd, ",");
+    
+    sprintf(str, "%d", item_info->layer);
+    strcat(cmd, str);
+    strcat(cmd, ",");
+    
+   for (int i = 0; i < sizeof(item_info->TID); i++) {
+        sprintf(str, "%02X", item_info->TID[i]);
+        strcat(cmd, str);
+    }
+    strcat(cmd, ",");
+    
+    if (item_info->instorage_time != 0xFFFFFFFF) {
+        Unix_To_YMD_Time(&system_time, item_info->instorage_time);
+        sprintf(str, "%dyy%dmm%ddd%d:%d", system_time.year, system_time.month, system_time.day, system_time.hour, system_time.minute);
+    } else {
+        sprintf(str, "NULL");
+    }
+    strcat(cmd, str);
+    strcat(cmd, ",");
+    
+    if (item_info->outstorage_time != 0xFFFFFFFF) {
+        Unix_To_YMD_Time(&system_time, item_info->outstorage_time);
+        sprintf(str, "%dyy%dmm%ddd%d:%d", system_time.year, system_time.month, system_time.day, system_time.hour, system_time.minute);
+    } else {
+        sprintf(str, "NULL");
+    }
+    strcat(cmd, str);
+    strcat(cmd, ",");
+    strcat(cmd, "\r\n");
+    
+    HAL_UART_Transmit(&huart3, cmd, strlen(cmd),0xFFFF); 	
+    printf("%s", cmd);
 }
 
 /**
@@ -219,13 +278,14 @@ void InternalFlash_ReadRecord(uint32_t dataLen)
                 printf("%02X ", p[i]);
             }
             printf("\r\n");
+            
+            InternalFlash_UploadRecord(item_info_new);
         } else {
             free(item_info_new);
             return;
         }
          cnt++;
     } while (1);    
-
 }
 
 /**

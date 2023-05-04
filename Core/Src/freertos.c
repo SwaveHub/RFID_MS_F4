@@ -233,7 +233,16 @@ void Start_Protocol_Task(void const * argument)
             &system_time.hour, &system_time.minute, &system_time.second);
         printf("%d-%d-%d %d:%d:%d\r\n", system_time.year, system_time.month, system_time.day,
             system_time.hour, system_time.minute, system_time.second);          
-    }   
+    }
+    if (Uart3_Rx_Sta == 1) {
+        printf("Uart3_Rx:%s\r\n", Uart3_Rx_Buf);
+        Protocol_Decode(PROTOCOL_MODE_DEFAULT, Uart3_Rx_Buf, strlen(Uart3_Rx_Buf));  
+        Uart3_Rx_Sta = 0;
+        RTC_Get(&system_time.year, &system_time.month, &system_time.day, 
+            &system_time.hour, &system_time.minute, &system_time.second);
+        printf("%d-%d-%d %d:%d:%d\r\n", system_time.year, system_time.month, system_time.day,
+            system_time.hour, system_time.minute, system_time.second);      
+    }
     osDelay(10);    
   }
   /* USER CODE END Start_Protocol_Task */

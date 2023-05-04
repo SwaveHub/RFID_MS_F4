@@ -36,5 +36,6 @@ void InternalFlash_WriteRecord(item_info_t** head_ref, uint32_t dataLen);
 void InternalFlash_ReadRecord(uint32_t dataLen);
 void InternalFlash_ResetRecord(uint32_t addrStart, uint32_t addrEnd);
 
+uint32_t InternalFlash_FindTIDAddr(uint8_t *tid, uint32_t addrStart, uint32_t dataLen);
 #endif /* __INTERNAL_FLASH_H */
 

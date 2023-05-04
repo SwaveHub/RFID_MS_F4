@@ -29,6 +29,10 @@ uint8_t Uart1_Rx_Sta = 0; //接收数据状态 0：未接收到数据  1：完整接收到一次数据
 
 uint8_t Uart2_Rx_Buf[UART2_REC_LEN];   //接收数据
 uint8_t Uart2_Rx_Cnt = 0;		//接收缓冲计数
+
+uint8_t Uart3_Rx_Buf[UART3_REC_LEN];   //接收数据
+uint8_t Uart3_Rx_Cnt = 0;		//接收缓冲计数
+uint8_t Uart3_Rx_Sta = 0; //接收数据状态 0：未接收到数据  1：完整接收到一次数据
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -356,23 +360,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
     /* 对串口3的中断服务函数处理 */
     if (huart->Instance == USART3) { 
-        if(Uart1_Rx_Cnt >= 255)  //溢出判断
+        if(Uart3_Rx_Cnt >= 255)  //溢出判断
         {
-            Uart1_Rx_Cnt = 0;
-            memset(Uart1_Rx_Buf,0x00,sizeof(Uart1_Rx_Buf));
+            Uart3_Rx_Cnt = 0;
+            memset(Uart3_Rx_Buf,0x00,sizeof(Uart3_Rx_Buf));
             HAL_UART_Transmit(&huart3, (uint8_t *)"数据溢出", 10,0xFFFF); 	
         }
         else
         {
             /* 当前数据未处理完前不接收新的数据 */
-            if (!Uart1_Rx_Sta) {  
-                Uart1_Rx_Buf[Uart1_Rx_Cnt++] = aRxBuffer;   //接收数据转存
+            if (!Uart3_Rx_Sta) {  
+                Uart3_Rx_Buf[Uart3_Rx_Cnt++] = aRxBuffer;   //接收数据转存
                 
-                if((Uart1_Rx_Buf[Uart1_Rx_Cnt-2] == 0x0D)&&(Uart1_Rx_Buf[Uart1_Rx_Cnt-1] == 0x0A)) //判断结束位
+                if((Uart3_Rx_Buf[Uart3_Rx_Cnt-2] == 0x0D)&&(Uart3_Rx_Buf[Uart3_Rx_Cnt-1] == 0x0A)) //判断结束位
                 {
-                    Uart1_Rx_Buf[Uart1_Rx_Cnt-2] = '\0';    //不把判断结束位的\r\n算进接收的数据
-                    Uart1_Rx_Cnt = 0;
-                    Uart1_Rx_Sta = 1;
+                    Uart3_Rx_Buf[Uart3_Rx_Cnt-2] = '\0';    //不把判断结束位的\r\n算进接收的数据
+                    Uart3_Rx_Cnt = 0;
+                    Uart3_Rx_Sta = 1;
                 }                       
             }
         }

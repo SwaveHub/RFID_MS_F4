@@ -159,7 +159,7 @@ void RTC_Set(uint16_t year, uint16_t month, uint16_t day, uint16_t hour, uint16_
     {
         Error_Handler();
     }
-
+    
     DateToUpdate.Year = year % 100;
 	DateToUpdate.Month = month;
 	DateToUpdate.Date = day;
